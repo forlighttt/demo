@@ -125,6 +125,13 @@ def main():
     if not any(data["services"].values()):
         print("bimassist вернул пустой прайс, оставляю прежние данные", file=sys.stderr)
         return 0
+    try:
+        old = json.loads((ROOT / "data.json").read_text(encoding="utf-8"))
+    except Exception:
+        old = {}
+    if {**old, "fetched_at": None} == {**data, "fetched_at": None}:
+        print("В bimassist ничего не поменялось")
+        return 0
     (ROOT / "data.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     n = sum(len(v) for v in data["services"].values())
     print(f"Обновлено: {n} услуг, {len(data['employees'])} мастеров, {len(data['reviews'])} отзывов")
