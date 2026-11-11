@@ -16,16 +16,16 @@
   },
   "photos": {
     "_comment": "Фото: пути внутри assets/. hero и *_page ставятся в шапку страницы, dogs/cats/rabbits в карточки на главной. works — галерея «Наши работы»: имя файла без -s.jpg/.jpg (рядом лежат большая и маленькая версии).",
-    "hero": "assets/img/hero-home.jpg",
-    "dogs": "assets/img/works/dogs-020-s.jpg",
-    "cats": "assets/img/works/cats-038-s.jpg",
-    "dogs_page": "assets/img/hero-dogs.jpg",
-    "cats_page": "assets/img/hero-cats.jpg",
+    "hero": "assets/img/dog-curly.jpg",
+    "dogs": "assets/img/dog-samoyed.jpg",
+    "cats": "assets/img/cat-tabby.jpg",
+    "dogs_page": "assets/img/dog-poodle.jpg",
+    "cats_page": "assets/img/cat-tuxedo.jpg",
     "before_after": [],
-    "rabbits": "assets/img/works/rabbits-017-s.jpg",
-    "rabbits_page": "assets/img/hero-rabbits.jpg"
+    "rabbits": "assets/img/rabbit-lop.jpg",
+    "rabbits_page": "assets/img/rabbit-lop.jpg"
   },
-  "photo_credit": "",
+  "photo_credit": "Фото в шапках: Unsplash. Раздел «Наши работы» — реальные фото салона.",
   "logo": {
     "dark": "assets/img/logo-black-sm.png",
     "light": "assets/img/logo-white.png",
@@ -112,5 +112,15 @@
       "name": "Спа",
       "min": 500
     }
+  },
+  "photo_sources": {
+    "dog-curly": "https://unsplash.com/photos/a-close-up-of-a-dog-with-a-black-background-g3zkdkoElkg",
+    "dog-samoyed": "https://unsplash.com/photos/a-close-up-of-a-white-dog-on-a-black-background-fP_3IYhtsos",
+    "cat-tabby": "https://unsplash.com/photos/a-close-up-of-a-cat-on-a-black-background-0aq6V0gKmCU",
+    "dog-poodle": "https://unsplash.com/photos/a-close-up-of-a-dog-with-a-black-background-rF4vipQOqZw",
+    "cat-tuxedo": "https://unsplash.com/photos/shallow-focus-photography-of-tuxedo-cat-o6RbK3y7mK4",
+    "dog-terrier": "https://unsplash.com/photos/a-close-up-of-a-dogs-face-on-a-black-background-dvcWhPe3pTM",
+    "dog-bichon": "https://unsplash.com/photos/a-small-white-dog-sitting-in-the-dark-AK3pMamtqko",
+    "rabbit-lop": "https://unsplash.com/photos/a-brown-and-white-rabbit-on-a-black-background-zydO3JJ8gOo"
   }
 }

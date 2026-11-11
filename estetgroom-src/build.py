@@ -512,7 +512,7 @@ def home():
     g = works(r, ["home"])
     if g:
         body += sec(g + f'<div class="cta-row rv"><a class="btn line" href="gruming-sobak/#works">Работы с собаками {ARR}</a><a class="btn line" href="gruming-koshek/#works">Работы с кошками {ARR}</a></div>',
-                    "works", ("Наши работы", "Питомцы после груминга", "Реальные фото из салона, без обработки и стоковых картинок."))
+                    "works", ("Наши работы", "Питомцы после груминга", "Реальные фото питомцев после груминга в нашем салоне."))
     body += sec(team(r=r) + f'<div class="cta-row rv"><a class="btn line" href="mastera/">Подробнее о мастерах {ARR}</a></div>', "team", ("Мастера", "Кто будет стричь"), cls="dark")
     body += before_after()
     body += sec(steps() + f'<div class="cta-row rv">{book("Перейти к записи")}</div>', "how", ("Онлайн-запись", "Три шага до записи"))
