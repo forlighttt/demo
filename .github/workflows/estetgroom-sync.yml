@@ -3,7 +3,7 @@ name: ЭстетГрум — цены из bimassist
 on:
   schedule:
     - cron: "0 3 * * *"   # каждый день в 06:00 по Москве
-  workflow_dispatch:
+  workflow_dispatch:   # ручной запуск всегда заливает сайт и на хостинг клиента
 
 permissions: {}
 
@@ -15,6 +15,9 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Доступ к хостингу клиента (Beget/Timeweb) лежит в секретах репозитория. Пока их нет, шаг пропускается.
+      HOST_ADDR: ${{ secrets.ESTET_SFTP_HOST }}
     permissions:
       contents: write   # закоммитить обновлённый сайт в estetgroom/
       pages: write      # попросить GitHub Pages пересобраться
@@ -33,13 +36,24 @@ jobs:
       - name: Положить сборку в estetgroom/
         run: rsync -a --delete estetgroom-src/dist/ estetgroom/
       - name: Сохранить, если что-то поменялось
+        id: save
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git add estetgroom estetgroom-src/data.json
           if git diff --cached --quiet; then echo "Без изменений"; exit 0; fi
+          echo "changed=1" >> "$GITHUB_OUTPUT"
           git config user.name "estetgroom-sync"
           git config user.email "estetgroom-sync@users.noreply.github.com"
           git commit -m "ЭстетГрум: данные из bimassist обновлены"
           git push
           gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null || true
+      - name: Залить на хостинг клиента
+        if: env.HOST_ADDR != '' && (steps.save.outputs.changed == '1' || github.event_name == 'workflow_dispatch')
+        env:
+          SFTP_USER: ${{ secrets.ESTET_SFTP_USER }}
+          SFTP_PASS: ${{ secrets.ESTET_SFTP_PASS }}
+          SFTP_DIR: ${{ secrets.ESTET_SFTP_DIR }}
+        run: |
+          sudo apt-get install -y -qq lftp >/dev/null
+          lftp -u "$SFTP_USER,$SFTP_PASS" "sftp://$HOST_ADDR" -e "set sftp:auto-confirm yes; set net:max-retries 2; mirror -R --delete --no-perms --verbose=1 estetgroom-src/dist/ ${SFTP_DIR:-public_html}/; bye"
