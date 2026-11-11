@@ -1,0 +1,44 @@
+{
+  "_comment": "Ручные настройки сайта. Всё, что меняется в bimassist (услуги, цены, мастера, рейтинг), подтягивается само в data.json.",
+  "domain": "",
+  "base_url": "",
+  "booking_url": "https://clients.bimassist.ru/581/services",
+  "org_id": 581,
+  "office_id": 470,
+  "city": "Краснодар",
+  "address_display": "ул. Скандинавская, д. 1 к11",
+  "map_url": "https://yandex.ru/maps/?text=%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D0%B4%D0%B0%D1%80%2C%20%D1%83%D0%BB%20%D0%A1%D0%BA%D0%B0%D0%BD%D0%B4%D0%B8%D0%BD%D0%B0%D0%B2%D1%81%D0%BA%D0%B0%D1%8F%2C%201%20%D0%BA11",
+  "yandex_metrika_id": "",
+  "socials": {
+    "whatsapp": "",
+    "telegram": "",
+    "vk": ""
+  },
+  "photos": {
+    "_comment": "Фото: пути внутри assets/ или полные ссылки. Когда клиент пришлёт свои фото, положите их в assets/img и поменяйте пути здесь. before_after: список пар {\"before\": \"...\", \"after\": \"...\"}, блок «До и после» появится сам.",
+    "hero": "assets/img/dog-curly.jpg",
+    "dogs": "assets/img/dog-samoyed.jpg",
+    "cats": "assets/img/cat-tabby.jpg",
+    "dogs_page": "assets/img/dog-poodle.jpg",
+    "cats_page": "assets/img/cat-tuxedo.jpg",
+    "before_after": [],
+    "rabbits": "assets/img/rabbit-lop.jpg",
+    "rabbits_page": "assets/img/rabbit-lop.jpg"
+  },
+  "photo_credit": "Фото животных: Unsplash",
+  "photo_sources": {
+    "dog-curly": "https://unsplash.com/photos/a-close-up-of-a-dog-with-a-black-background-g3zkdkoElkg",
+    "dog-samoyed": "https://unsplash.com/photos/a-close-up-of-a-white-dog-on-a-black-background-fP_3IYhtsos",
+    "cat-tabby": "https://unsplash.com/photos/a-close-up-of-a-cat-on-a-black-background-0aq6V0gKmCU",
+    "dog-poodle": "https://unsplash.com/photos/a-close-up-of-a-dog-with-a-black-background-rF4vipQOqZw",
+    "cat-tuxedo": "https://unsplash.com/photos/shallow-focus-photography-of-tuxedo-cat-o6RbK3y7mK4",
+    "dog-terrier": "https://unsplash.com/photos/a-close-up-of-a-dogs-face-on-a-black-background-dvcWhPe3pTM",
+    "dog-bichon": "https://unsplash.com/photos/a-small-white-dog-sitting-in-the-dark-AK3pMamtqko",
+    "rabbit-lop": "https://unsplash.com/photos/a-brown-and-white-rabbit-on-a-black-background-zydO3JJ8gOo"
+  },
+  "logo": {
+    "dark": "assets/img/logo-black-sm.png",
+    "light": "assets/img/logo-white.png",
+    "light_sm": "assets/img/logo-white-sm.png"
+  }
+}
