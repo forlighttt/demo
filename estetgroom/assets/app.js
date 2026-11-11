@@ -1,5 +1,20 @@
 (function () {
+  // Защита от кликджекинга: сайт не должен открываться внутри чужой рамки
+  if (window.top !== window.self) {
+    try { window.top.location.replace(window.location.href); } catch (e) { document.documentElement.style.display = 'none'; return; }
+  }
   var root = document.documentElement;
+
+  // Если фото мастера не загрузилось, показываем первую букву имени
+  document.querySelectorAll('img[data-fallback]').forEach(function (img) {
+    var swap = function () {
+      var s = document.createElement('span');
+      s.className = 'initial';
+      s.textContent = img.getAttribute('data-fallback');
+      img.replaceWith(s);
+    };
+    if (img.complete && img.naturalWidth === 0) swap(); else img.addEventListener('error', swap);
+  });
   var cfg = window.SITE || {};
   var bookingUrl = cfg.bookingUrl;
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
