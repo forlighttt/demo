@@ -1,22 +1,26 @@
 (function () {
-  // Защита от кликджекинга: сайт не должен открываться внутри чужой рамки
-  if (window.top !== window.self) {
-    try { window.top.location.replace(window.location.href); } catch (e) { document.documentElement.style.display = 'none'; return; }
-  }
   var root = document.documentElement;
+  var ds = document.body.dataset;
+  var cfg = { bookingUrl: ds.booking || '', metrika: /^\d+$/.test(ds.metrika || '') ? +ds.metrika : null };
+  var bookingUrl = cfg.bookingUrl;
+
+  // Яндекс.Метрика (только если в настройках задан номер счётчика)
+  if (cfg.metrika) {
+    window.ym = window.ym || function () { (window.ym.a = window.ym.a || []).push(arguments); };
+    window.ym.l = +new Date();
+    var ms = document.createElement('script'); ms.async = true; ms.src = 'https://mc.yandex.ru/metrika/tag.js';
+    document.head.appendChild(ms);
+    window.ym(cfg.metrika, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+  }
 
   // Если фото мастера не загрузилось, показываем первую букву имени
   document.querySelectorAll('img[data-fallback]').forEach(function (img) {
     var swap = function () {
-      var s = document.createElement('span');
-      s.className = 'initial';
-      s.textContent = img.getAttribute('data-fallback');
+      var s = document.createElement('span'); s.className = 'initial'; s.textContent = img.getAttribute('data-fallback') || '';
       img.replaceWith(s);
     };
-    if (img.complete && img.naturalWidth === 0) swap(); else img.addEventListener('error', swap);
+    if (img.complete && !img.naturalWidth) swap(); else img.addEventListener('error', swap);
   });
-  var cfg = window.SITE || {};
-  var bookingUrl = cfg.bookingUrl;
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Запуск анимации первого экрана
@@ -86,6 +90,7 @@
   var lastFocus = null;
   function openBooking(service) {
     goal('booking_open', service ? { service: service } : undefined);
+    if (!/^https:\/\/clients\.bimassist\.ru\//.test(bookingUrl)) return;
     if (!modal || !frame || window.innerWidth < 340) { window.open(bookingUrl, '_blank', 'noopener'); return; }
     lastFocus = document.activeElement;
     if (!frame.getAttribute('src')) frame.setAttribute('src', bookingUrl);
