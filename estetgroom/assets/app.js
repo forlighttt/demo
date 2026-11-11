@@ -131,4 +131,32 @@
     if (t) t.textContent = open ? 'Открыто до ' + hh(to) : 'Откроемся в ' + hh(from);
     var d = st.querySelector('.dot'); if (d) d.classList.toggle('off', !open);
   });
+
+  // Галерея «Наши работы»: просмотр фото поверх сайта
+  var shots = Array.prototype.slice.call(document.querySelectorAll('a[data-lightbox]'));
+  if (shots.length) {
+    var lb = document.createElement('div'); lb.className = 'lightbox'; lb.hidden = true;
+    lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Фото работы');
+    var big = document.createElement('img'); big.alt = 'Работа салона';
+    var mk = function (cls, txt, label) { var b = document.createElement('button'); b.className = cls; b.textContent = txt; b.setAttribute('aria-label', label); return b; };
+    var bClose = mk('lb-close', '×', 'Закрыть'), bPrev = mk('lb-prev', '‹', 'Предыдущее фото'), bNext = mk('lb-next', '›', 'Следующее фото');
+    lb.appendChild(big); lb.appendChild(bClose); lb.appendChild(bPrev); lb.appendChild(bNext); document.body.appendChild(lb);
+    var cur = 0, back = null;
+    var show = function (i) { cur = (i + shots.length) % shots.length; big.src = shots[cur].getAttribute('href'); };
+    var close = function () { lb.hidden = true; document.body.classList.remove('no-scroll'); if (back) back.focus(); };
+    shots.forEach(function (a, i) {
+      a.addEventListener('click', function (ev) {
+        if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+        ev.preventDefault(); back = a; show(i); lb.hidden = false; document.body.classList.add('no-scroll'); bClose.focus();
+      });
+    });
+    bClose.addEventListener('click', close);
+    bPrev.addEventListener('click', function () { show(cur - 1); });
+    bNext.addEventListener('click', function () { show(cur + 1); });
+    lb.addEventListener('click', function (ev) { if (ev.target === lb) close(); });
+    document.addEventListener('keydown', function (ev) {
+      if (lb.hidden) return;
+      if (ev.key === 'Escape') close(); else if (ev.key === 'ArrowLeft') show(cur - 1); else if (ev.key === 'ArrowRight') show(cur + 1);
+    });
+  }
 })();

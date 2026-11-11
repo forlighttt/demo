@@ -22,6 +22,30 @@ BOOK = C["booking_url"]
 assert BOOK.startswith("https://clients.bimassist.ru/"), "booking_url должен вести на clients.bimassist.ru"
 BASE = (C.get("base_url") or (f"https://{C['domain']}" if C.get("domain") else "")).rstrip("/")
 PH = C.get("photos", {})
+
+
+def _apply_price_overrides():
+    """Правки заказчика поверх прайса из bimassist (config.json → price_overrides)."""
+    ov = {k: v for k, v in (C.get("price_overrides") or {}).items() if not k.startswith("_")}
+    for key, lst in D["services"].items():
+        keep = []
+        for sv in lst:
+            o = ov.get(str(sv.get("id")), {})
+            if o.get("hide"):
+                continue
+            if "name" in o:
+                sv["name"] = str(o["name"])[:120]
+            if "desc" in o:
+                sv["desc"] = str(o["desc"])[:600]
+            if isinstance(o.get("min"), int) and 0 <= o["min"] <= 1_000_000:
+                sv["min"] = o["min"]
+                if sv.get("max") is not None and sv["max"] < sv["min"]:
+                    sv["max"] = sv["min"]
+            keep.append(sv)
+        D["services"][key] = keep
+
+
+_apply_price_overrides()
 e = html.escape
 
 PAGES = [("", "Главная"), ("gruming-sobak", "Собаки"), ("gruming-koshek", "Кошки"), ("gruming-krolikov", "Кролики"),
@@ -236,7 +260,7 @@ def row(s):
     <div class="row-side"><span class="row-book">Позвонить {ARR}</span></div>
   </div>
 </a>'''
-    rng = rub(s["min"]) if s["min"] == s["max"] else f"от {rub(s['min'])}"
+    rng = f"от {rub(s['min'])}"
     d = dur(s["dmin"]) if s["dmin"] == s["dmax"] else f"от {dur(s['dmin'])}"
     return f'''<a class="row" href="{e(BOOK)}" target="_blank" rel="noopener" data-book="{e(svc_name(s))}">
   <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
@@ -283,19 +307,44 @@ def steps():
         f'<div class="step rv rv-d{i}"><span class="n">0{i + 1}</span><h3>{a}</h3><p>{b}</p></div>' for i, (a, b) in enumerate(st)) + "</div>"
 
 
-def team(full=False):
+def _team():
+    """Мастера: сначала из config.json (team.list), затем остальные из bimassist."""
+    own = [m for m in (C.get("team") or {}).get("list", []) if m.get("name")]
+    names = {m["name"].strip().lower() for m in own}
+    return own + [m for m in D["employees"] if m["name"].strip().lower() not in names]
+
+
+TEAM = _team()
+
+
+def team(full=False, r=""):
     cards = []
-    for i, m in enumerate(D["employees"]):
-        photo = safe_url(m.get("photo"), ALLOWED_IMG_HOSTS)
+    for i, m in enumerate(TEAM):
+        raw = m.get("photo") or ""
+        photo = (r + raw) if raw.startswith("assets/") else safe_url(raw, ALLOWED_IMG_HOSTS)
         ph = (f'<img src="{e(photo)}" alt="{e(m["name"])}, {e(m["role"].lower())}" loading="lazy" '
               f'data-fallback="{e(m["name"][:1])}">' if photo
               else f'<span class="initial">{e(m["name"][:1])}</span>')
         cards.append(f'''<article class="master rv rv-d{i % 2}">
   <div class="master-photo">{ph}</div>
   <div class="master-info"><div><span class="label">{e(m["role"])}</span><h3>{e(m["name"])}</h3><p>{e(tidy(m["about"]))}</p></div>
-  {book("Записаться", m["name"], "btn line small") if full else ""}</div>
+  {book("Записаться", m["name"], "btn line small") if full and m.get("book", True) else ""}</div>
 </article>''')
     return f'<div class="team">{"".join(cards)}</div>'
+
+
+def works(r, kinds, limit=None):
+    """Галерея «Наши работы» из реальных фото салона."""
+    W = C.get("works") or {}
+    items = [p for k in kinds for p in W.get(k, []) if isinstance(p, str) and p.startswith("assets/")]
+    if limit:
+        items = items[:limit]
+    if not items:
+        return ""
+    cells = "".join(
+        f'<a class="work rv rv-d{i % 3}" href="{e(r + p)}.jpg" data-lightbox><img src="{e(r + p)}-s.jpg" alt="Работа салона {e(NAME)}" loading="lazy" decoding="async"></a>'
+        for i, p in enumerate(items))
+    return f'<div class="works">{cells}</div>'
 
 
 def before_after():
@@ -460,7 +509,11 @@ def home():
 </div>'''
     body += sec(pets, "", ("Для кого", "Собаки, кошки и кролики" if RABBITS else "Собаки и кошки", "Своя программа ухода для каждого вида: с купанием и без, стрижка под машинку или модельная, вычёс во время линьки."))
     body += sec(price_tabs(), "prices", ("Прайс", "Услуги и цены", "Нажмите на услугу, чтобы сразу записаться."))
-    body += sec(team() + f'<div class="cta-row rv"><a class="btn line" href="mastera/">Подробнее о мастерах {ARR}</a></div>', "team", ("Мастера", "Кто будет стричь"), cls="dark")
+    g = works(r, ["home"])
+    if g:
+        body += sec(g + f'<div class="cta-row rv"><a class="btn line" href="gruming-sobak/#works">Работы с собаками {ARR}</a><a class="btn line" href="gruming-koshek/#works">Работы с кошками {ARR}</a></div>',
+                    "works", ("Наши работы", "Питомцы после груминга", "Реальные фото из салона, без обработки и стоковых картинок."))
+    body += sec(team(r=r) + f'<div class="cta-row rv"><a class="btn line" href="mastera/">Подробнее о мастерах {ARR}</a></div>', "team", ("Мастера", "Кто будет стричь"), cls="dark")
     body += before_after()
     body += sec(steps() + f'<div class="cta-row rv">{book("Перейти к записи")}</div>', "how", ("Онлайн-запись", "Три шага до записи"))
     quote = TEXT_REVIEWS[0]["text"] if TEXT_REVIEWS else "Все супер!"
@@ -469,7 +522,7 @@ def home():
 <div class="revs rv">
   <div><b>{RATING}</b><span>средняя оценка</span></div>
   <div><b>{ORG["review_count"]}</b><span>отзывов, все на пять звёзд</span></div>
-  <div><b>{len(D["employees"])}</b><span>мастера, к каждому можно записаться</span></div>
+  <div><b>{len(TEAM)}</b><span>мастера в команде</span></div>
 </div>
 <div class="cta-row rv"><a class="btn line" href="otzyvy/">Все отзывы {ARR}</a></div>''', "reviews", cls="dark")
     body += sec(faq(FAQ_COMMON), "faq", ("Вопросы", "Частые вопросы"))
@@ -478,12 +531,15 @@ def home():
                 f"Груминг собак и кошек в {CITY}е, {ADDRESS}. Стрижка по породе, экспресс-линька, чистка зубов. Цены от {rub(min_price(DOGS + CATS))}. Онлайн-запись, {HOURS.lower()}.", body)
 
 
-def pet_page(slug, lst, h1_lines, crumb, lead, faq_extra, title, desc, photo_key, photo_alt):
+def pet_page(slug, lst, h1_lines, crumb, lead, faq_extra, title, desc, photo_key, photo_alt, kind="dogs"):
     r = "../"
     body = page_hero(r, crumb, h1_lines, lead, photo_key, photo_alt)
     body += ticker()
     body += sec(menu(lst) + MENU_NOTE, "prices", ("Прайс", "Услуги и цены", "Нажмите на услугу, чтобы сразу записаться."))
-    body += sec(team(), "", ("Мастера", "Кто будет ухаживать"), cls="dark")
+    g = works(r, [kind])
+    if g:
+        body += sec(g, "works", ("Наши работы", "Питомцы после груминга", "Реальные фото из салона."))
+    body += sec(team(r=r), "", ("Мастера", "Кто будет ухаживать"), cls="dark")
     body += sec(steps(), "how", ("Онлайн-запись", "Три шага до записи"))
     body += sec(faq(faq_extra + FAQ_COMMON[1:]), "faq", ("Вопросы", "Частые вопросы"))
     body += contacts("../")
@@ -519,7 +575,7 @@ def cats_page():
                     f"Стрижка и бритьё с купанием и без, экспресс-линька, вычёс линялой шерсти. {e(CITY)}, {e(ADDRESS)}.",
                     qs, f"Груминг кошек в {CITY}е: стрижка и вычёс | {NAME}",
                     f"Стрижка и вычёс кошек в {CITY}е, с купанием и без. Экспресс-линька. Цены от {rub(min_price(CATS))}. Онлайн-запись.",
-                    "cats_page", "Кошка после груминга")
+                    "cats_page", "Кошка после груминга", kind="cats")
 
 
 def rabbits_page():
@@ -539,7 +595,7 @@ def rabbits_page():
 
 def masters_page():
     body = page_hero("../", "Мастера", ("Наши", "<em>грумеры</em>"), "Записаться можно к конкретному мастеру: выберите его в онлайн-записи.")
-    body += sec(team(full=True), cls="dark")
+    body += sec(team(full=True, r="../"), cls="dark")
     body += contacts("../")
     return page("mastera", f"Грумеры салона {NAME} в {CITY}е", f"Мастера груминг-салона {NAME}: опыт, специализация, запись к мастеру онлайн.", body)
 
