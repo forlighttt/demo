@@ -103,7 +103,9 @@ def fetch() -> dict:
             })
         data["services"][key] = services
     reviews = get(f"{API}/reviews")
-    reviews = reviews.get("data", reviews) if isinstance(reviews, dict) else reviews
+    while isinstance(reviews, dict):  # ответ бывает обёрнут в data, иногда дважды (пагинация)
+        reviews = reviews.get("data") or reviews.get("reviews") or reviews.get("items") or []
+    reviews = [r for r in reviews if isinstance(r, dict)]
     data["reviews"] = [{
         "name": txt((r.get("creator") or {}).get("firstname") or "Клиент", 40),
         "rating": min(5, max(1, num(r.get("rating") or 5))), "text": txt(r.get("text"), 500) or None,
@@ -116,6 +118,8 @@ def main():
     try:
         data = fetch()
     except Exception as e:  # сеть, формат ответа: сайт соберётся из прошлых данных
+        import traceback
+        traceback.print_exc()
         print(f"bimassist недоступен, оставляю прежние данные: {e}", file=sys.stderr)
         return 0
     if not any(data["services"].values()):
